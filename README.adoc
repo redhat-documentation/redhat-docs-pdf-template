@@ -1,0 +1,86 @@
+== About
+
+A simple containerized `asciidoctor-pdf` build that you can use build a Red Hat themed PDF.
+
+== Prerequisites
+
+* Install Podman
+
+* Add the following line to your source repo `.gitignore` and commit the change:
++
+[source,text]
+----
+pdf-assets
+----
+
+== Running the build locally
+
+. Open a shell prompt at the folder containing your assembly.
+
+. Pull the container image with Podman:
++
+[source,terminal]
+----
+$ podman pull quay.io/redhat-docs/redhat-docs-pdf-template
+----
+
+. Load the build assets to the local context:
++
+[source,terminal]
+----
+$ podman cp $(podman run --detach quay.io/redhat-docs/redhat-docs-pdf-template):/pdf-assets ./pdf-assets
+----
+
+. Optional. Add a custom SVG format logo:
++
+[source,terminal]
+----
+$ cp <path_to_logo> pdf-assets/images/logo.svg
+----
+
+. Run the build:
++
+[source,terminal]
+----
+$ podman run --rm -it -v "$(pwd)":/docs:Z quay.io/redhat-docs/redhat-docs-pdf-template <asciidoc_assembly_file>
+----
+
+== Using the container build in a GitHub action
+
+Copy the following YAML to the `.github/workflows/build-pdf-release.yml` file in your repository.
+Commit and push the changes to create the PDF as a GitHub release artifact.
+
+.Example build-pdf-release.yml
+[source,yaml]
+----
+name: Build and deploy PDF
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Extract assets
+        run: docker cp $(docker run --detach quay.io/redhat-docs/redhat-docs-template):/pdf-assets ./pdf-assets
+
+      - name: Build PDF
+        uses: docker://quay.io/redhat-docs/redhat-docs-pdf-template
+        with:
+          args: main.adoc
+
+       - name: Create PDF release
+         run: |
+           echo $GITHUB_RUN_NUMBER > version.txt
+           mv main.pdf redhat-docs-pdf-template.pdf
+           gh release create v$GITHUB_RUN_NUMBER redhat-docs-pdf-template.pdf
+         env:
+           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+----
