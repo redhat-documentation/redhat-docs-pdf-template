@@ -8,6 +8,7 @@ page:
   margin_outer: 0.59in
   size: A4
 title_page:
+  revision: "Last updated: *{revdate}*"
   logo:
     image: image:./images/logo.svg[pdfwidth=45%,align=right,top=15%]
   background-image: image:./images/background.jpeg[pdfwidth=100%,fit=contain]
