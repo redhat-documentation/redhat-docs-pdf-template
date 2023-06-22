@@ -2,9 +2,9 @@
 
 set -e
 
-ASSEMBLY="$1"
+INPUT=("$@")
 
-asciidoctor-pdf "$ASSEMBLY" \
+asciidoctor-pdf "${INPUT[@]}" \
 -a pdf-themesdir=pdf-assets \
 -a pdf-theme=redhat \
 -a toc-title="" \
@@ -17,4 +17,4 @@ asciidoctor-pdf "$ASSEMBLY" \
 -a iconsdir="pdf-assets/icons"
 
 echo ""
-echo "Built $ASSEMBLY as PDF"
+echo "PDF built in current dir."

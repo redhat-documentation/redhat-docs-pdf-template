@@ -42,8 +42,18 @@ $ cp <path_to_logo> pdf-assets/images/logo.svg
 +
 [source,terminal]
 ----
-$ podman run --rm -it -v "$(pwd)":/docs:Z quay.io/redhat-docs/redhat-docs-pdf-template <asciidoc_assembly_file>
+$ podman run --rm -it -v "$(pwd)":/docs:Z quay.io/redhat-docs/redhat-docs-pdf-template <asciidoc_assembly_file> <optional_parameters>
 ----
++
+[NOTE]
+====
+Pass optional Asciidoctor format build parameters by using the `-a` switch. For example:
+
+[source,terminal]
+----
+$ podman run --rm -it -v "$(pwd)":/docs:Z quay.io/redhat-docs/redhat-docs-pdf-template main.adoc -a internal
+----
+====
 
 == Using the container build in a GitHub action
 
@@ -69,7 +79,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Extract assets
-        run: docker cp $(docker run --detach quay.io/redhat-docs/redhat-docs-template):/pdf-assets ./pdf-assets
+        run: docker cp $(docker run --detach quay.io/redhat-docs/redhat-docs-pdf-template):/pdf-assets ./pdf-assets
 
       - name: Build PDF
         uses: docker://quay.io/redhat-docs/redhat-docs-pdf-template
@@ -83,4 +93,33 @@ jobs:
            gh release create v$GITHUB_RUN_NUMBER redhat-docs-pdf-template.pdf
          env:
            GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+----
+
+== Using the container build in a GitLab pipeline
+
+Copy the following YAML to the `.gitlab-ci.yml` file in your repository root. Adjust as required. Commit and push the changes to deploy the site using GitLab pages.
+
+Build assumes `main.adoc` is in the project root.
+
+.Example .gitlab-ci.yml
+[source,yaml]
+----
+image:
+  name: quay.io/redhat-docs/redhat-docs-pdf-template
+  entrypoint: [""]
+
+pages:
+  stage: deploy
+  before_script:
+    - cp -r /pdf-assets pdf-assets
+  script:
+    - /build.sh main.adoc
+  artifacts:
+    paths:
+    - ./main.pdf
+  only:
+    - main
+  tags:
+    - shared
+    - docker
 ----
